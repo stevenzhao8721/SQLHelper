@@ -89,6 +89,25 @@ namespace SQLHelper
         }
 
         /// <summary>
+        /// 查询单个数据
+        /// </summary>
+        /// <param name="cmdText"></param>
+        /// <param name="paras"></param>
+        /// <param name="commandType"></param>
+        /// <returns></returns>
+        public string SingleDataRead(string cmdText, SqlParameter[] paras, CommandType commandType = CommandType.Text)
+        {
+            string result = "";
+            using (cmd=new SqlCommand(cmdText,GetConn()))
+            {
+                cmd.Parameters.AddRange(paras);
+                cmd.CommandType = commandType;
+                result = cmd.ExecuteScalar().ToString().Trim();
+            }
+            return result;
+        }
+
+        /// <summary>
         /// 异步参考
         /// </summary>
         /// <param name="ar"></param>
