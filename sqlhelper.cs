@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace SQLHelper
 {
-    public class sqlhelper
+    public static class sqlhelper
     {
         private static SqlConnection conn = null;
         private static SqlCommand cmd = null;
-        private SqlDataReader sdr = null;
+        private static SqlDataReader sdr = null;
 
         /// <summary>
         /// 在App.config 里设置目标数据库的连接信息，然后使用该类
@@ -64,7 +64,8 @@ namespace SQLHelper
             DataTable dt = new DataTable();
             cmd = new SqlCommand(cmdText, GetConn());
             cmd.CommandType = commandType;
-
+            if (paras != null)
+                cmd.Parameters.AddRange(paras);
             cmd.BeginExecuteReader(callback, cmd);
         }
 
@@ -75,11 +76,12 @@ namespace SQLHelper
         /// <param name="paras">参数集合</param>
         /// <param name="ct">执行类型</param>
         /// <returns>DataTable</returns>
-        public DataTable SyncRead(string cmdText, SqlParameter[] paras, CommandType commandType = CommandType.Text)
+        public static DataTable SyncRead(string cmdText, SqlParameter[] paras=null, CommandType commandType = CommandType.Text)
         {
             DataTable dt = new DataTable();
             cmd = new SqlCommand(cmdText, GetConn());
-            cmd.Parameters.AddRange(paras);
+            if (paras != null)
+                cmd.Parameters.AddRange(paras);
             cmd.CommandType = commandType;
             using (sdr = cmd.ExecuteReader(CommandBehavior.CloseConnection))
             {
@@ -95,12 +97,13 @@ namespace SQLHelper
         /// <param name="paras"></param>
         /// <param name="commandType"></param>
         /// <returns></returns>
-        public string SingleDataRead(string cmdText, SqlParameter[] paras, CommandType commandType = CommandType.Text)
+        public static string SingleDataRead(string cmdText, SqlParameter[] paras=null, CommandType commandType = CommandType.Text)
         {
             string result = "";
             using (cmd=new SqlCommand(cmdText,GetConn()))
             {
-                cmd.Parameters.AddRange(paras);
+                if (paras != null)
+                    cmd.Parameters.AddRange(paras);
                 cmd.CommandType = commandType;
                 result = cmd.ExecuteScalar().ToString().Trim();
             }
