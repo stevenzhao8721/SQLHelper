@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SQLHelper
 {
-    public static class sqlhelper
+    public class sqlhelper
     {
         private static SqlConnection conn = null;
         private static SqlCommand cmd = null;
@@ -18,12 +18,12 @@ namespace SQLHelper
         /// 在App.config 里设置目标数据库的连接信息，然后使用该类
         /// </summary>
         /// <param name="sqldatabase">数据库名称</param>
-        public static void connect(string sqldatabase)
+        public void connect(string sqldatabase)
         {
             conn = new SqlConnection(sqldatabase);
         }
 
-        private static SqlConnection GetConn()
+        private SqlConnection GetConn()
         {
             if (conn.State == ConnectionState.Closed)
             {
@@ -39,7 +39,7 @@ namespace SQLHelper
         /// <param name="paras">可选cmd参数</param>
         /// <param name="commandType">可选command类型</param>
         /// <returns></returns>
-        public static int CUD(string cmdText, SqlParameter[] paras = null, CommandType commandType = CommandType.Text)
+        public int CUD(string cmdText, SqlParameter[] paras = null, CommandType commandType = CommandType.Text)
         {
             int res;
             using (cmd = new SqlCommand(cmdText, GetConn()))
@@ -59,7 +59,7 @@ namespace SQLHelper
         /// <param name="callback">回调函数</param>
         /// <param name="paras">可选cmd参数</param>
         /// <param name="commandType">可选command类型</param>
-        public static void AsyncRead(string cmdText, AsyncCallback callback, SqlParameter[] paras = null, CommandType commandType = CommandType.Text)
+        public void AsyncRead(string cmdText, AsyncCallback callback, SqlParameter[] paras = null, CommandType commandType = CommandType.Text)
         {
             DataTable dt = new DataTable();
             cmd = new SqlCommand(cmdText, GetConn());
@@ -76,7 +76,7 @@ namespace SQLHelper
         /// <param name="paras">参数集合</param>
         /// <param name="ct">执行类型</param>
         /// <returns>DataTable</returns>
-        public static DataTable SyncRead(string cmdText, SqlParameter[] paras=null, CommandType commandType = CommandType.Text)
+        public DataTable SyncRead(string cmdText, SqlParameter[] paras=null, CommandType commandType = CommandType.Text)
         {
             DataTable dt = new DataTable();
             cmd = new SqlCommand(cmdText, GetConn());
@@ -97,7 +97,7 @@ namespace SQLHelper
         /// <param name="paras"></param>
         /// <param name="commandType"></param>
         /// <returns></returns>
-        public static string SingleDataRead(string cmdText, SqlParameter[] paras=null, CommandType commandType = CommandType.Text)
+        public string SingleDataRead(string cmdText, SqlParameter[] paras=null, CommandType commandType = CommandType.Text)
         {
             string result = "";
             using (cmd=new SqlCommand(cmdText,GetConn()))
@@ -114,7 +114,7 @@ namespace SQLHelper
         /// 异步参考
         /// </summary>
         /// <param name="ar"></param>
-        private static void ProcessData(IAsyncResult ar)
+        private void ProcessData(IAsyncResult ar)
         {
             SqlCommand cmd = (SqlCommand)ar.AsyncState;
             using (cmd.Connection)
