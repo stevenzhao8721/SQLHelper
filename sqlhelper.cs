@@ -10,6 +10,26 @@ namespace SQLHelper
 {
     public class sqlhelper
     {
+
+        private string _constring;
+        /// <summary>
+        /// SQL数据库
+        /// </summary>
+        /// <param name="connectionString">数据库连接配置</param>
+        public sqlhelper(string connectionString)
+        {
+            _constring = connectionString；
+        }
+        
+        public int ExecuteSync(string sqlcmd,Sqlparameter[] paras=null)
+        {
+
+        }
+
+
+
+
+
         private static SqlConnection conn = null;
         private static SqlCommand cmd = null;
         private static SqlDataReader sdr = null;
