@@ -8,16 +8,16 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("SQLHelper")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Georg Fischer")]
+[assembly: AssemblyCompany("TracingX")]
 [assembly: AssemblyProduct("SQLHelper")]
-[assembly: AssemblyCopyright("Copyright © Georg Fischer 2020")]
+[assembly: AssemblyCopyright("Copyright © TracingX 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
 // COM, set the ComVisible attribute to true on that type.
-[assembly: ComVisible(false)]
+[assembly: ComVisible(true)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("7ae4f7a5-d811-4abb-a62f-bafcac401585")]

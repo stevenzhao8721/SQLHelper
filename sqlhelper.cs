@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,141 +12,179 @@ namespace SQLHelper
     public class sqlhelper
     {
 
-        private string _constring;
+        private string _constring, _logpath;
         /// <summary>
-        /// SQL数据库
+        /// 数据库帮助类
         /// </summary>
-        /// <param name="connectionString">数据库连接配置</param>
-        public sqlhelper(string connectionString)
+        /// <param name="connectionString">数据库连接字符串</param>
+        /// <param name="logfilePath">故障记录文件路径</param>
+        public sqlhelper(string connectionString, string logfilePath)
         {
-            _constring = connectionString；
-        }
-        
-        public int ExecuteSync(string sqlcmd,Sqlparameter[] paras=null)
-        {
-
+            _constring = connectionString;
+            _logpath = logfilePath;
         }
 
-
-
-
-
-        private static SqlConnection conn = null;
-        private static SqlCommand cmd = null;
-        private static SqlDataReader sdr = null;
-
-        /// <summary>
-        /// 在App.config 里设置目标数据库的连接信息，然后使用该类
-        /// </summary>
-        /// <param name="sqldatabase">数据库名称</param>
-        public void connect(string sqldatabase)
+        private void ErrorLog(string errmessage)
         {
-            conn = new SqlConnection(sqldatabase);
-        }
-
-        private SqlConnection GetConn()
-        {
-            if (conn.State == ConnectionState.Closed)
+            try
             {
-                conn.Open();
+                StreamWriter sw = new StreamWriter(_logpath,true);
+                //开始写入
+                sw.WriteLine(errmessage + "||| time:" + DateTime.Now);
+                //清空缓冲区
+                sw.Flush();
+                //关闭流
+                sw.Close();
             }
-            return conn;
-        }
-
-        /// <summary>
-        /// SQL C\U\D
-        /// </summary>
-        /// <param name="cmdText">sql命令语句</param>
-        /// <param name="paras">可选cmd参数</param>
-        /// <param name="commandType">可选command类型</param>
-        /// <returns></returns>
-        public int CUD(string cmdText, SqlParameter[] paras = null, CommandType commandType = CommandType.Text)
-        {
-            int res;
-            using (cmd = new SqlCommand(cmdText, GetConn()))
+            catch
             {
-                if (paras != null)
-                    cmd.Parameters.AddRange(paras);
-                cmd.CommandType = commandType;
-                res = cmd.ExecuteNonQuery();
-            }
-            return res;
+
+            }           
         }
 
         /// <summary>
-        /// SQL Read，异步
+        /// 同步CURD
         /// </summary>
-        /// <param name="cmdText">sql命令语句</param>
-        /// <param name="callback">回调函数</param>
-        /// <param name="paras">可选cmd参数</param>
-        /// <param name="commandType">可选command类型</param>
-        public void AsyncRead(string cmdText, AsyncCallback callback, SqlParameter[] paras = null, CommandType commandType = CommandType.Text)
-        {
-            DataTable dt = new DataTable();
-            cmd = new SqlCommand(cmdText, GetConn());
-            cmd.CommandType = commandType;
-            if (paras != null)
-                cmd.Parameters.AddRange(paras);
-            cmd.BeginExecuteReader(callback, cmd);
-        }
-
-        /// <summary>
-        /// SQL Read，同步
-        /// </summary>
-        /// <param name="cmdText">带参数的SQL查询语句</param>
-        /// <param name="paras">参数集合</param>
-        /// <param name="ct">执行类型</param>
-        /// <returns>DataTable</returns>
-        public DataTable SyncRead(string cmdText, SqlParameter[] paras=null, CommandType commandType = CommandType.Text)
-        {
-            DataTable dt = new DataTable();
-            cmd = new SqlCommand(cmdText, GetConn());
-            if (paras != null)
-                cmd.Parameters.AddRange(paras);
-            cmd.CommandType = commandType;
-            using (sdr = cmd.ExecuteReader(CommandBehavior.CloseConnection))
-            {
-                dt.Load(sdr);
-            }
-            return dt;
-        }
-
-        /// <summary>
-        /// 查询单个数据
-        /// </summary>
-        /// <param name="cmdText"></param>
+        /// <param name="sqlcmd"></param>
         /// <param name="paras"></param>
         /// <param name="commandType"></param>
-        /// <returns></returns>
-        public string SingleDataRead(string cmdText, SqlParameter[] paras=null, CommandType commandType = CommandType.Text)
+        /// <returns>Error return:-99</returns>
+        public int ExecuteSync(string sqlcmd,SqlParameter[] paras=null, CommandType commandType = CommandType.Text)
         {
-            string result = "";
-            using (cmd=new SqlCommand(cmdText,GetConn()))
+            using(var newconnection = new SqlConnection(_constring))
+            using (var cmd = new SqlCommand(sqlcmd, newconnection))
             {
-                if (paras != null)
-                    cmd.Parameters.AddRange(paras);
-                cmd.CommandType = commandType;
-                result = cmd.ExecuteScalar().ToString().Trim();
+                try
+                {
+                    if (paras != null)
+                        cmd.Parameters.AddRange(paras);
+                    cmd.CommandType = commandType;
+                    newconnection.Open();
+                    return cmd.ExecuteNonQuery();
+                }
+                catch(Exception ex)
+                {
+                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    return -99;
+                }              
             }
-            return result;
+        }
+        /// <summary>
+        /// 异步CURD
+        /// </summary>
+        /// <param name="sqlcmd"></param>
+        /// <param name="paras"></param>
+        /// <param name="commandType"></param>
+        /// <returns>Error return:-99</returns>
+        public async Task<int> ExecuteAsync(string sqlcmd, SqlParameter[] paras = null, CommandType commandType = CommandType.Text)
+        {
+            using (var newconnection = new SqlConnection(_constring))
+            using (var cmd = new SqlCommand(sqlcmd, newconnection))
+            {
+                try
+                {
+                    if (paras != null)
+                        cmd.Parameters.AddRange(paras);
+                    cmd.CommandType = commandType;
+                    await newconnection.OpenAsync().ConfigureAwait(false);
+                    return await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+                }
+                catch(Exception ex)
+                {
+                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    return -99;
+                }
+            }
         }
 
         /// <summary>
-        /// 异步参考
+        /// 
         /// </summary>
-        /// <param name="ar"></param>
-        private void ProcessData(IAsyncResult ar)
+        /// <param name="sqlcmd"></param>
+        /// <param name="paras"></param>
+        /// <param name="commandType"></param>
+        /// <returns>Error return:null</returns>
+        public DataTable ExecuteQuerySync(string sqlcmd, SqlParameter[] paras = null, CommandType commandType = CommandType.Text)
         {
-            SqlCommand cmd = (SqlCommand)ar.AsyncState;
-            using (cmd.Connection)
+            DataTable dt = new DataTable();
+            using (var newconnection = new SqlConnection(_constring))
+            using (var cmd = new SqlCommand(sqlcmd, newconnection))
             {
-                using (cmd)
+                try
                 {
-                    SqlDataReader sdr = cmd.EndExecuteReader(ar);
-                    DataTable dt = new DataTable();
-                    dt.Load(sdr);
+                    if (paras != null)
+                        cmd.Parameters.AddRange(paras);
+                    cmd.CommandType = commandType;
+                    newconnection.Open();
+                    dt.Load(cmd.ExecuteReader(CommandBehavior.CloseConnection));
+                    return dt;
+                }
+                catch (Exception ex)
+                {
+                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    return null;
                 }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sqlcmd"></param>
+        /// <param name="paras"></param>
+        /// <param name="commandType"></param>
+        /// <returns>Error return:null</returns>
+        public async Task<DataTable> ExecuteQueryAsync(string sqlcmd, SqlParameter[] paras = null, CommandType commandType = CommandType.Text)
+        {
+            DataTable dt = new DataTable();
+            using (var newconnection = new SqlConnection(_constring))
+            using (var cmd = new SqlCommand(sqlcmd, newconnection))
+            {
+                try
+                {
+                    if (paras != null)
+                        cmd.Parameters.AddRange(paras);
+                    cmd.CommandType = commandType;
+                    await newconnection.OpenAsync().ConfigureAwait(false);
+                    dt.Load(await cmd.ExecuteReaderAsync(CommandBehavior.CloseConnection).ConfigureAwait(false));
+                    return dt;
+                }
+                catch (Exception ex)
+                {
+                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    return null;
+                }
+            }
+        }
+
+       /// <summary>
+       /// 
+       /// </summary>
+       /// <param name="sqlcmd"></param>
+       /// <param name="paras"></param>
+       /// <param name="commandType"></param>
+       /// <returns>Error return:null</returns>
+        public string SingleDataRead(string sqlcmd, SqlParameter[] paras=null, CommandType commandType = CommandType.Text)
+        {
+            using (var newconnection = new SqlConnection(_constring))
+            using (var cmd = new SqlCommand(sqlcmd, newconnection))
+            {
+                try
+                {
+                    if (paras != null)
+                        cmd.Parameters.AddRange(paras);
+                    cmd.CommandType = commandType;
+                    newconnection.Open();
+                    string result = cmd.ExecuteScalar().ToString().Trim();
+                    newconnection.Close();
+                    return result;
+                }
+                catch(Exception ex)
+                {
+                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    return null;
+                }                
+            }           
         }
     }
 }
