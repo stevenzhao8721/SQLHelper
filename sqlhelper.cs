@@ -64,7 +64,7 @@ namespace SQLHelper
                 }
                 catch(Exception ex)
                 {
-                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    ErrorLog(ex.Message + "|| cmd: " + sqlcmd);
                     return -99;
                 }              
             }
@@ -91,7 +91,7 @@ namespace SQLHelper
                 }
                 catch(Exception ex)
                 {
-                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    ErrorLog(ex.Message + "|| cmd: " + sqlcmd);
                     return -99;
                 }
             }
@@ -121,7 +121,7 @@ namespace SQLHelper
                 }
                 catch (Exception ex)
                 {
-                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    ErrorLog(ex.Message + "|| cmd: "+sqlcmd);
                     return null;
                 }
             }
@@ -146,12 +146,12 @@ namespace SQLHelper
                         cmd.Parameters.AddRange(paras);
                     cmd.CommandType = commandType;
                     await newconnection.OpenAsync().ConfigureAwait(false);
-                    dt.Load(await cmd.ExecuteReaderAsync(CommandBehavior.CloseConnection).ConfigureAwait(false));
+                    dt.Load(await cmd.ExecuteReaderAsync().ConfigureAwait(false));
                     return dt;
                 }
                 catch (Exception ex)
                 {
-                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    ErrorLog(ex.Message + "|| cmd: " + sqlcmd);
                     return null;
                 }
             }
@@ -181,7 +181,7 @@ namespace SQLHelper
                 }
                 catch(Exception ex)
                 {
-                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    ErrorLog(ex.Message + "|| cmd: " + sqlcmd);
                     return null;
                 }                
             }           
