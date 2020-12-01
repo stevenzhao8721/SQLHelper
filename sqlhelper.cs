@@ -146,7 +146,7 @@ namespace SQLHelper
                         cmd.Parameters.AddRange(paras);
                     cmd.CommandType = commandType;
                     await newconnection.OpenAsync().ConfigureAwait(false);
-                    dt.Load(await cmd.ExecuteReaderAsync().ConfigureAwait(false));
+                    dt.Load(await cmd.ExecuteReaderAsync(CommandBehavior.CloseConnection).ConfigureAwait(false));
                     return dt;
                 }
                 catch (Exception ex)
