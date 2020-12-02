@@ -6,13 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using LogFunc;
 namespace SQLHelper
 {
     public class sqlhelper
     {
 
-        private string _constring, _logpath;
+        private string _constring;
+        ErrorFile log;
         /// <summary>
         /// 数据库帮助类
         /// </summary>
@@ -21,25 +22,7 @@ namespace SQLHelper
         public sqlhelper(string connectionString, string logfilePath)
         {
             _constring = connectionString;
-            _logpath = logfilePath;
-        }
-
-        private void ErrorLog(string errmessage)
-        {
-            try
-            {
-                StreamWriter sw = new StreamWriter(_logpath,true);
-                //开始写入
-                sw.WriteLine(errmessage + "||| time:" + DateTime.Now);
-                //清空缓冲区
-                sw.Flush();
-                //关闭流
-                sw.Close();
-            }
-            catch
-            {
-
-            }           
+            log = new ErrorFile(logfilePath);
         }
 
         /// <summary>
@@ -63,8 +46,8 @@ namespace SQLHelper
                     return cmd.ExecuteNonQuery();
                 }
                 catch(Exception ex)
-                {
-                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                {                    
+                    log.ErrorLog(ex.Message + "|| cmd: sqlcmd");
                     return -99;
                 }              
             }
@@ -91,7 +74,7 @@ namespace SQLHelper
                 }
                 catch(Exception ex)
                 {
-                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    log.ErrorLog(ex.Message + "|| cmd: sqlcmd");
                     return -99;
                 }
             }
@@ -121,7 +104,7 @@ namespace SQLHelper
                 }
                 catch (Exception ex)
                 {
-                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    log.ErrorLog(ex.Message + "|| cmd: sqlcmd");
                     return null;
                 }
             }
@@ -151,7 +134,7 @@ namespace SQLHelper
                 }
                 catch (Exception ex)
                 {
-                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    log.ErrorLog(ex.Message + "|| cmd: sqlcmd");
                     return null;
                 }
             }
@@ -181,7 +164,7 @@ namespace SQLHelper
                 }
                 catch(Exception ex)
                 {
-                    ErrorLog(ex.Message + "|| cmd: sqlcmd");
+                    log.ErrorLog(ex.Message + "|| cmd: sqlcmd");
                     return null;
                 }                
             }           
